@@ -4,6 +4,8 @@
 #include "CPALFile.h"
 #include "DataTypes.h"
 #include "DBEncDec.h"
+#define FILETYPE_FOLDER 0x00003
+#define FILETYPE_FILE   0x20001
 class CCPKFile : public CRSTEncDec//, public CDBDecEnc
 {
 public:
@@ -12,14 +14,14 @@ public:
 public:
     CPALFile        file;
     _HEADERINFO     _hdi;
-    _DATA_LIST* _plist;
-    int            m_iListNum;
+    fileIndex_t*     _plist;
+    int             m_iListNum;
     DWORD           dwFileSize;
     LPBYTE          pData;
 public:
-    _DATA_LIST* GetIndexList()
+    fileIndex_t* GetIndexList()
     {
-        return (_DATA_LIST*)pData;
+        return (fileIndex_t*)pData;
     }
 public:
     int   DecCPKFile(LPCTSTR strOpen, LPCTSTR strSave);

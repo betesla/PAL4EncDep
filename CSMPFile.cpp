@@ -110,7 +110,7 @@ int     CSMPFile::WriteData(LPCTSTR strpath, LPCTSTR name)
     {
         BYTE    pdat[0x10] = { 0 };
 
-        int iRe = file.PalRead(file.hOpen, _plist[num]._04dwSeek, pdat, 0x10); if (iRe < 0) { break; }
+        int iRe = file.PalRead(file.hOpen, _plist[num].Offset, pdat, 0x10); if (iRe < 0) { break; }
 
         if (num == 0) { wsprintf(cc, "%s.%s", name, GetDecType(pdat)); }
         else { wsprintf(cc, "%s_%02X.%s", name, num, GetDecType(pdat)); }
@@ -119,13 +119,13 @@ int     CSMPFile::WriteData(LPCTSTR strpath, LPCTSTR name)
         if (file.PalCreate(path) < 0)
         {
             wsprintf(ss, "(%d)创建文件[%02X]<0x%08X>:%s  ...创建错误!",
-                num, _plist[num]._07dwNumber, _plist[num]._04dwSeek, cc);
+                num, _plist[num].RevFnLen, _plist[num].Offset, cc);
 
             printf(ss + '\n');
             continue;
         }
         wsprintf(ss, "(%d)创建文件[%02X]<0x%08X>:%s  ...创建成功!",
-            num, _plist[num]._07dwNumber, _plist[num]._04dwSeek, cc);
+            num, _plist[num].RevFnLen, _plist[num].Offset, cc);
 
         printf(ss + '\n');
 
@@ -141,8 +141,8 @@ int     CSMPFile::WriteData(LPCTSTR strpath, LPCTSTR name)
 int     CSMPFile::SaveFile(int num, char* name)
 {
     char  ss[MAX_PATH] = { 0 };
-    int   size = _plist[num]._05dwLenght1;
-    int   seek = _plist[num]._04dwSeek;
+    int   size = _plist[num].LzoSize;
+    int   seek = _plist[num].Offset;
     int   len = 0;
 
     char* pdat = new char[size];
@@ -163,7 +163,7 @@ int     CSMPFile::SaveFile(int num, char* name)
         wsize += len;
 
         wsprintf(ss, "%s ->处理:%d/%d [%s%d]",
-            name, wsize, _plist[num]._05dwLenght1, "%",
+            name, wsize, _plist[num].LzoSize, "%",
             ((wsize / 0x1000) * 100) / (size / 0x1000));
 
         printf(ss + '\n', 0x01);
@@ -173,7 +173,7 @@ int     CSMPFile::SaveFile(int num, char* name)
 
     delete[] pdat;
     wsprintf(ss, "(%d)处理成功:%s ->[处理%dByte/原始%dByte]!",
-        num, name, wsize, _plist[num]._05dwLenght1);
+        num, name, wsize, _plist[num].LzoSize);
     printf(ss + '\n', 0x00);
 
     return 0;

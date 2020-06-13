@@ -1,6 +1,6 @@
 #pragma once
 #include <afx.h>
-
+#include "stdint.h"
 class CRSTEncDec
 {
 public:
@@ -13,5 +13,6 @@ public:
 public:
     int       RSTLoadKey(char* key1 = NULL, char* key2 = NULL, char* key3 = NULL);
     int       RSTDecrpyt(LPVOID pdat, DWORD  dwnum, LPVOID pkey = NULL);
+    void      btea(uint32_t* v, int n, uint32_t const key[4]);
     int       RSTDecIndex(LPVOID pbuf, DWORD len);
 };

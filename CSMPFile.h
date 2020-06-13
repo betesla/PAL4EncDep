@@ -11,14 +11,14 @@ public:
 public:
     CPALFile        file;
     _HEADERINFO     _hdi;
-    _DATA_LIST* _plist;
+    fileIndex_t* _plist;
     int            m_iListNum;
     DWORD           dwFileSize;
     LPBYTE          pData;
 public:
-    _DATA_LIST* GetIndexList()
+    fileIndex_t* GetIndexList()
     {
-        return (_DATA_LIST*)pData;
+        return (fileIndex_t*)pData;
     }
 public:
     int   DecSMPFile(LPCTSTR strOpen, LPCTSTR strSave, LPCTSTR name = NULL);

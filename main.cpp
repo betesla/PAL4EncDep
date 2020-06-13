@@ -1,10 +1,13 @@
 ﻿#include <iostream>
 #include "CCPKFile.h"
+using namespace std;
 int main()
 {
     CCPKFile file;
-    file.DecCPKFile("E:\\PAL\\Game\\xianjianqixiazhuan4PJ\\gamedata\\2d.cpk", "E:\\PAL\\Datas\\");
-    std::cout << "Hello World!\n";
+    string sourth = "E:\\PAL\\Game\\xianjianqixiazhuan4PJ\\gamedata\\database.cpk";
+    string desti = "E:\\PAL\\Datas\\";
+    file.DecCPKFile(sourth.c_str(), desti.c_str());
+    std::cout << "Unpack finished!\n";
     return 0;
 }
 

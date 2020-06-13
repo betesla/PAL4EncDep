@@ -64,7 +64,7 @@ int   CCPKFile::DecCPKFile(LPCTSTR strOpen, LPCTSTR strSave)
         file.hWrite = NULL;
     }
 
-    delete[] pData;
+    //delete[] pData;
 
     return 0;
 }
@@ -78,9 +78,9 @@ int    CCPKFile::DecCPKIndex(LPCTSTR strOpen)
 
     if (_hdi._01dwLogon == FILE_LOGON)
     {
-        if (file.PalRead(file.hOpen, pData, _hdi._05dwLenSub * 0x20) != 0)
+        if (file.PalRead(file.hOpen, pData, _hdi._05dwLenSub * 0x20) != 0)//最大文件索引数量为0x8000 即32768，0x20为索引的大小，所以此处为读取
         {
-            int re = RSTDecIndex(pData, MAX_FILE_SIZE);
+            int re = RSTDecIndex(pData, _hdi._05dwLenSub * 0x20);
             _plist = GetIndexList();
             return re;
         }
@@ -120,7 +120,7 @@ int     CCPKFile::WriteData(LPCTSTR strpath)
         seek += rsize;
 
         wsprintf(ss, "(%d)装载文件: %d / %d", num, seek - 0x100000, size);
-        printf(ss + '\r', 0x01);
+        printf(ss);
         //theApp.m_Dlg->m_pgsLog.SetPos(((seek / 0x1000) * 100) / (dwFileSize / 0x1000));
 
         if ((dwFileSize - seek) < 0x100000) { rsize = dwFileSize - seek; }
@@ -142,38 +142,61 @@ int     CCPKFile::DecData(char* pdat, int len, LPCTSTR strpath)
     char   ss[MAX_PATH] = { 0 };
     strcpy(ss, strpath);
 
-    for (int num = 0; num < m_iListNum; num++)
+    for (int num = 0; num < m_iListNum; num++)//循环读取每个文件
     {
-        int   size = _plist[num]._05dwLenght1;
-        int   seek = _plist[num]._04dwSeek - 0x100000;
+        //TestMethod start
+        //printf("File type:0x%x,name:%s\n",_plist[num].Rev2,pdat-0x100000+_plist[num].Offset);
+        
+        //continue;
+        //TestMethod end
+        int   size = _plist[num].LzoSize;
+        int   seek = _plist[num].Offset - 0x100000;
         char* psrc = pdat + seek;
 
-        if (_plist[num]._05dwLenght1 == 0x00 && _plist[num]._06dwLenght2 == 0x00)
+        if (_plist[num].Rev2==FILETYPE_FOLDER)
         {
             wsprintf(ss, "%s%s", strpath, (char*)(psrc + size));
             ::CreateDirectory(ss, NULL);
-            //strcpy(ss, strpath);
+            strcpy(ss, strpath);
             continue;
         }
-
+        int parentSize = 0;
+        int parentSeek = 0;
+        char* parentName = 0;
+        if (_plist[num].ParentVID != 0) {
+            
+            for (size_t i = 0; i < m_iListNum; i++){
+                if (_plist[i].VID == _plist[num].ParentVID) {
+                    parentSize = _plist[i].LzoSize;
+                    parentSeek = _plist[i].Offset - 0x100000;
+                    parentName = pdat + parentSeek;
+                    printf("ParentName is:%s\n",parentName+parentSize);
+                    break;
+                }
+            }
+        }
+        wsprintf(ss,"%s%s\\",ss,parentName);
         DWORD   dstlen = 0x00;
-        if (_plist[num]._06dwLenght2 <= 0x1000) { dstlen = 0x1000; }
-        if (_plist[num]._06dwLenght2 > 0x1000) { dstlen = (_plist[num]._06dwLenght2 / 0x1000) * 0x1000 + 0x1000; }
+        if (_plist[num].FileSize <= 0x1000) { dstlen = 0x1000; }
+        if (_plist[num].FileSize > 0x1000) { dstlen = (_plist[num].FileSize / 0x1000) * 0x1000 + 0x1000; }
 
         char* pdst = new char[dstlen];
 
-        if (_plist[num]._05dwLenght1 != _plist[num]._06dwLenght2)
+        printf("(%d/%d),05dwLength1:%d,06dwLength2:%d,dstlen:%d\n",num, m_iListNum,_plist[num].LzoSize,_plist[num].FileSize,dstlen);
+
+        if (_plist[num].LzoSize != _plist[num].FileSize)
         {
             //printf("This part of code is to be fixed later\n");
             int iRe = DBDecrpyt((const unsigned char*)psrc, size, (unsigned char*)pdst, &dstlen, 0x00);
-            SaveFile(num, pdst, dstlen, ss, (char*)(psrc + size));
+            SaveFile(num, pdst, dstlen, ss, (char*)(psrc + size));//< 存储解密后的文件
             //SaveFile(num, psrc, size, ss, (char*)(psrc + size));
         }
         else {
             SaveFile(num, psrc, size, ss, (char*)(psrc + size));
         }
-
+        strcpy(ss, strpath);
         delete[] pdst;
+        printf("Delete success\n");
     }
     return 0;
 }
@@ -187,14 +210,14 @@ int     CCPKFile::SaveFile(int num, char* pdat, int len, LPCTSTR strpath, LPCTST
     if (file.PalCreate(path) < 0)
     {
         wsprintf(ss, "(%d)创建文件[%02X]<0x%08X>:%s  ...创建错误!\n",
-            num, _plist[num]._07dwNumber, _plist[num]._04dwSeek, strname);
+            num, _plist[num].RevFnLen, _plist[num].Offset, strname);
 
         printf(ss + '\n');
         return 0;
     }
 
     wsprintf(ss, "(%d)创建文件[%02X]<0x%08X>:%s  ...创建成功!\n",
-        num, _plist[num]._07dwNumber, _plist[num]._04dwSeek, strname);
+        num, _plist[num].RevFnLen, _plist[num].Offset, strname);
     printf(ss + '\n');
 
     if (len > 0x00)
